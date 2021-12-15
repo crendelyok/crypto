@@ -2,9 +2,7 @@ from hashlib import sha256
 from time import time
 import json
 
-
 class Block:
-
     def __init__(self, **kwargs):
         """
         Create a new block for the Blockchain
@@ -13,11 +11,16 @@ class Block:
         :param data: Data to store in the block, defaults to an empty list
         :param prevHash: Hash of the previous block, defaults to None.  Should always be specefied except for the genesis block.
         """
-        self.timestamp = kwargs.get('timestamp', time())
-        self.data = kwargs.get('data', [])
-        self.prevHash = kwargs.get('prevHash', None)
-        self._hash = None
-        self.nonce = 0
+
+        self.type = kwargs.get('type', None)
+        self.account = kwargs.get('address', None)
+        self.previous = kwargs.get('prevHash', None)
+        self.representative = kwargs.get('representative', None)
+        self.balance = kwargs.get('balance', None)
+        self.link = kwargs.get('link', None)
+        self.signature = kwargs.get('signature', None)
+        self.work = kwargs.get('work', None)
+        
 
     @property
     def hash(self):
@@ -127,11 +130,3 @@ class Blockchain:
              for item in self],
             indent=4
         )
-
-
-if __name__ == '__main__':
-    chain = Blockchain()
-    chain.append({"from": "John", "to": "Bob", "amount": 100})
-    chain.append({"from": "bob", "to": "john", "amount": 50})
-
-    print(chain)
