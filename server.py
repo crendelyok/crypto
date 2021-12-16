@@ -13,7 +13,7 @@ from configuration import *
 
 class Server():
     def __init__(self):
-        self.server_node = p2p.BlockchainNode(HOST, 8001, 1)
+        self.server_node = p2p.BlockchainNode(HOST, HOST_PORT, HOST_ID)
         
     def start_server(self):
         self.server_node.start()
@@ -36,7 +36,6 @@ class Server():
         for node in self.server_node.all_nodes:
             message = { 'id' : node.id, 'ICO' : 5 }
             self.server_node.send_to_nodes(message) 
-            # self.server_node.send_to_nodes("ICO")
             print(f'sent ICO: {message}')
 
 
@@ -49,36 +48,36 @@ def Test_chain_alike_net():
     server.start_server()
 
     nodes = []
-    number_of_test_nodes = 20
+    number_of_test_nodes = 5
 
     for i in range(number_of_test_nodes):
-        node = p2p.BlockchainNode(HOST, 8000 + 2 + i, 8000 + 2 + i)
+        node = p2p.BlockchainNode(HOST, HOST_PORT + 1 + i, HOST_PORT + 1 + i)
         nodes.append(node)
         node.start()
-        node.connect_with_node(HOST, 8000 + 1 + i, reconnect=True)
-        
+        time.sleep(1)
+        node.connect_with_node(HOST, HOST_PORT + i)
+
     for node in nodes:
         node.send_discovery()
         # time.sleep(1)
 
-    time.sleep(240)
+    time.sleep(1)
     server.print_connections()
     server.ICO()
 
-    time.sleep(5)
+    # time.sleep(1)
     for node in nodes:
         print('\n')
         print('################################')
         print(f'All node {node.id} connections')
-        for node in node.all_nodes:
-            print(node)
+        for node_connection in node.all_nodes:
+            print(node_connection)
+        node.print_known_ids()
         print('################################')
         print('\n')
 
     for node in nodes:
         node.stop()
-
-    print('Stopping server')
     server.stop_server()
     return
 

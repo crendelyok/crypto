@@ -1,6 +1,6 @@
 HOST = '127.0.0.1'
 HOST_PORT = 8001
-HOST_ID = 1
+HOST_ID = '1'
 
 class bcolors:
     HEADER = '\033[95m'

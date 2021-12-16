@@ -10,7 +10,6 @@ class BlockchainNode (Node):
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(BlockchainNode, self).__init__(host, port, id, callback, max_connections)
         self.debug = False
-        
         self.blockchain = bc.Blockchain()
 
         self.discovery_messages = {}
@@ -19,20 +18,30 @@ class BlockchainNode (Node):
         self.key = self.key_pair_generate() # tuple (private, public)
         #   self.id = repr(self.key[1]) # if is the public key
 
+
+
     #######################################################
     # Useful methods                                      #
     #######################################################
 
-
+    def print_known_ids(self):
+        print(f'Known ids for node id {self.id}')
+        for known_id in self.known_ids:
+            print(known_id)
+        print('\n')
 
     #######################################################
     # Connect and disconnect                              #
     #######################################################
 
     def outbound_node_connected(self, node):
+        if node.id not in self.known_ids:
+            self.known_ids.append(node.id)
         print("outbound_node_connected (" + self.id + "): " + node.id)
         
     def inbound_node_connected(self, node):
+        if node.id not in self.known_ids:
+            self.known_ids.append(node.id)
         print("inbound_node_connected: (" + self.id + "): " + node.id)
 
     def inbound_node_disconnected(self, node):
@@ -87,53 +96,90 @@ class BlockchainNode (Node):
     #######################################################
     # Dicovery messages recieve and answer. Network logic #
     #######################################################
-
+    
     def send_discovery(self):
     # Self discovery to all connected nodes
         self.send_to_nodes(self.make_message(
-            {'type' : 'discovery'}
+            {'type' : 'discovery', 'ip' : self.host, 'port' : self.port, 'id' : self.id}
         ))
 
     def recieve_discovery(self, node, message):
     # Deal with 'dicovery' type of message
+        if message['id'] not in self.known_ids and message['id'] != self.id:
+            self.known_ids.append(message['id'])
+
         if message['id'] in self.discovery_messages:
-            # already discovered so no need to deal with it
+        # already discovered so no need to deal with it
             pass 
         else:
-            self.discovery_messages[message['id']] = node
-            self.send_discovery_answer(node, message)
-            self.send_to_nodes(self.make_message(
-                {'type' : 'discovery', 'id' : message['id']}
-            ), [node]) # send to everyone except that initial node
+            self.send_to_nodes(message, [node]) #relay
+            self.discovery_messages[message['id']] = message
 
-    def send_discovery_answer(self, node, message):
-    # Send discovery answer after getting discovery message
-    # Answer contains all nodes that we are connected to
-        nodes = []
-        for n in self.nodes_inbound:
-            nodes.append({'id': n.id, 'ip': n.host, 'port': n.port})
-        for n in self.nodes_outbound:
-            nodes.append({'id': n.id, 'ip': n.host, 'port': n.port})
+            # then, if not connected we connect
+            connected = False
+            for n in self.all_nodes:
+                if n.id == message['id'] or self.id == message['id']:
+                    connected = True
+            if not connected:
+                self.connect_with_node(message['ip'], message['port'])
 
-        node.send(self.make_message(
-            {'id': message['id'], 'type': 'discovery_answer', 'nodes': nodes}
-            ))
+
+
+        # else:
+        #     self.discovery_messages[message['id']] = node
+        #     self.send_discovery_answer(node, message)
+        #     self.send_to_nodes(self.make_message(
+        #         {'type' : 'discovery', 'id' : message['id']}
+        #     ), [node]) # send to everyone except that initial node
+
+
+    # number of sends are n! = not good (legacy)
+    # def send_discovery(self):
+    # Self discovery to all connected nodes
+        # self.send_to_nodes(self.make_message(
+        #     {'type' : 'discovery'}
+        # ))
+
+    # def recieve_discovery(self, node, message):
+    # # Deal with 'dicovery' type of message
+    #     if message['id'] in self.discovery_messages:
+    #         # already discovered so no need to deal with it
+    #         pass 
+    #     else:
+    #         self.discovery_messages[message['id']] = node
+    #         self.send_discovery_answer(node, message)
+    #         self.send_to_nodes(self.make_message(
+    #             {'type' : 'discovery', 'id' : message['id']}
+    #         ), [node]) # send to everyone except that initial node
+
+    # def send_discovery_answer(self, node, message):
+    # # Send discovery answer after getting discovery message
+    # # Answer contains all nodes that we are connected to
+    #     nodes = []
+    #     for n in self.nodes_inbound:
+    #         nodes.append({'id': n.id, 'ip': n.host, 'port': n.port})
+    #     for n in self.nodes_outbound:
+    #         nodes.append({'id': n.id, 'ip': n.host, 'port': n.port})
+
+    #     node.send(self.make_message(
+    #         {'id': message['id'], 'type': 'discovery_answer', 'nodes': nodes}
+    #         ))
              
-    def receive_discovery_answer(self, node, message):
-    # Send answer to discovery_answer
-        if message['id'] in self.discovery_messages:
-            self.send_discovery_answer(self.discovery_messages[message['id']], message) #relaying
-        else:
-            if (message['id'] == self.id):
-                # I was waiting for this!
-                for n in message['nodes']:
-                    self.connect_with_node(n['ip'], n['port'])
-                # print()
-                # print(f'{bcolors.OKCYAN}{message}{bcolors.ENDC}')
-                # print()
-            else:
-                # Something strange!
-                print(f'{bcolors.FAIL}Recieved discovery_answer but with invalid id!! {message}{bcolors.ENDC}')
+    # def receive_discovery_answer(self, node, message):
+    # # Send answer to discovery_answer
+    #     if message['id'] in self.discovery_messages:
+    #         self.send_discovery_answer(self.discovery_messages[message['id']], message) #relaying
+    #     else:
+    #         if (message['id'] == self.id):
+    #             # I was waiting for this!
+    #             for n in message['nodes']:
+    #                 self.connect_with_node(n['ip'], n['port'])
+    #             # print()
+    #             # print(f'{bcolors.OKCYAN}{message}{bcolors.ENDC}')
+    #             # print()
+    #         else:
+    #             # Something strange!
+    #             print(f'{bcolors.FAIL}Recieved discovery_answer but with invalid id!! {message}{bcolors.ENDC}')
 
 
     #######################################################
