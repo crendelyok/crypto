@@ -3,6 +3,12 @@
 Model of cryptocurrnecy based on nano crypto. 
 Blockchain based block-lattice structure etc.
 
+Unfortunately, net must me fully-connected. It is easier: we don`t need to broadcast every message we get to all known nodes. 
+It is a bad solution: we cannot scale the net.
+## Installation
+>pip install pycryptodome \
+pip install p2pnetwork 
+
 ## How to run
 ### Step 1 
 >python ./server

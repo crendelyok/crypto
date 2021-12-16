@@ -1,14 +1,21 @@
 from p2pnetwork.node import Node
 import p2p_nodes.blockchain.blockchain as bc
 import time
+from Crypto.PublicKey import RSA
+
+from configuration import *
 
 class BlockchainNode (Node):
 
     def __init__(self, host, port, id=None, callback=None, max_connections=0):
         super(BlockchainNode, self).__init__(host, port, id, callback, max_connections)
         self.blockchain = bc.Blockchain()
-        self.rsa = None # make public and private keys
-        self.discovery_messages = {} # aka known nodes
+
+        self.known_nodes = []
+        self.discovery_messages = {}
+        # Account
+        self.key = self.key_pair_generate() # tuple (private, public)
+        #   self.id = repr(self.key[1]) # if is the public key
 
     #######################################################
     # Connect and disconnect                              #
@@ -47,7 +54,6 @@ class BlockchainNode (Node):
                     self.recieve_discovery(node, message)
                 elif (message['type'] == 'discovery_answer'):
                     self.receive_discovery_answer(node, message)
-                   
                 else:
                     pass
     
@@ -106,10 +112,10 @@ class BlockchainNode (Node):
     # Send answer to discovery_answer
         if message['id'] in self.discovery_messages:
             self.send_discovery_answer(self.discovery_messages[message['id']], message)
-
         else:
             if (message['id'] == self.id):
                 # I was waiting for this!
+                self.connect_with_node(HOST, node.port)
                 pass
             else:
                 # Something strange!
@@ -128,6 +134,13 @@ class BlockchainNode (Node):
     # Returns sign of the node
         return 1
     
+    def key_pair_generate(self):
+    # Returns tuple (private, public)
+        key = RSA.generate(2048)
+        # Should save to use them in case the node`s power off 
+        print(f'{bcolors.OKGREEN}{key}{bcolors.ENDC}')
+        print(f'{bcolors.OKGREEN}{key.public_key()}{bcolors.ENDC}')
+        return (1, self.port)
+ 
     def get_public_key(self):
-    # Returns public key of the node   
-        return 1
+        return self.key[1]

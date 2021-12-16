@@ -1,7 +1,4 @@
 import argparse
-from flask import Flask
-from flask import render_template, redirect, url_for
-from flask import request
 import p2p_nodes.blockchain_node as p2p
 import time 
 
@@ -16,7 +13,9 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-HOST = "127.0.0.1"
+HOST = '127.0.0.1'
+HOST_PORT = 8001
+HOST_ID = 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -29,14 +28,14 @@ if __name__ == '__main__':
 
     # If ICO didn`t finished yet, we participate 
     if args.ico is not None:
-        node = p2p.BlockchainNode(HOST, int(args.port), int(args.port))
+        node = p2p.BlockchainNode(HOST, int(args.port))
         node.start()
 
-        node.connect_with_node('127.0.0.1', 8001)
+        node.connect_with_node(HOST, HOST_PORT)
         node.send_to_nodes("I want initial coins!")
         time.sleep(10)
 
-        # Store initial couins
+        # Store initial coins
         # ...
 
     # Otherwise we connect to the net having 0 on the balance

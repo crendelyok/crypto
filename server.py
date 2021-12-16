@@ -17,19 +17,17 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-HOST = '127.0.0.1'
-
 import argparse
-from ctypes import OleDLL
-from flask import Flask
-from flask import render_template, redirect, url_for
-from flask import request
 import p2p_nodes.blockchain_node as p2p
 import time 
 
+HOST = '127.0.0.1'
+HOST_PORT = 8001
+HOST_ID = 1
+
 class Server():
     def __init__(self):
-        self.server_node = p2p.BlockchainNode("127.0.0.1", 8001, 1)
+        self.server_node = p2p.BlockchainNode(HOST, 8001, 1)
     
     def start_server(self):
         self.server_node.start()
@@ -59,15 +57,20 @@ def Test():
     # every node that connected during sleep gets initial balance
     nodes = []
     for i in range(5):
-        node = p2p.BlockchainNode(HOST, 8000 + i, 8000 + i)
+        node = p2p.BlockchainNode(HOST, 8000 + 2 + i, 8000 + 2 + i)
         nodes.append(node)
         node.start()
-        node.connect_with_node(HOST, 8001)
-        node.send_to_nodes("I want initial coins!")
+        node.connect_with_node(HOST, 8000 + 1 + i)
+        # node.send_to_nodes("I want initial coins!")
         
-    time.sleep(1)
+    for i in range(5):
+        node.send_discovery()
+
+    time.sleep(5)
     server.print_connections()
     server.ICO()
+
+    time.sleep(5)
     for node in nodes:
         node.stop()
     server.stop_server()
@@ -112,5 +115,3 @@ if __name__ == '__main__':
 
 
     server.stop_server()
-    # print(app)
-    # app.run(debug=True)
