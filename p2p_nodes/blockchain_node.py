@@ -8,7 +8,7 @@ class BlockchainNode (Node):
         super(BlockchainNode, self).__init__(host, port, id, callback, max_connections)
         self.blockchain = bc.Blockchain()
         self.rsa = None # make public and private keys
-        self.discovery_messages = {}
+        self.discovery_messages = {} # aka known nodes
 
     #######################################################
     # Connect and disconnect                              #
@@ -45,6 +45,9 @@ class BlockchainNode (Node):
             if ('type' in message):
                 if (message['type'] == 'discovery'):
                     self.recieve_discovery(node, message)
+                elif (message['type'] == 'discovery_answer'):
+                    self.receive_discovery_answer(node, message)
+                   
                 else:
                     pass
     
@@ -99,7 +102,7 @@ class BlockchainNode (Node):
             {'id': message['id'], 'type': 'discovery_answer', 'timestamp': message['timestamp'], 'nodes': nodes}
             ))
              
-    def received_discovery_answer(self, node, message):
+    def receive_discovery_answer(self, node, message):
     # Send answer to discovery_answer
         if message['id'] in self.discovery_messages:
             self.send_discovery_answer(self.discovery_messages[message['id']], message)

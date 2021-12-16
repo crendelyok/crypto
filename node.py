@@ -27,7 +27,6 @@ if __name__ == '__main__':
         print(bcolors.FAIL + 'Please specify port using "-p port_number"' + bcolors.ENDC)
         assert args.port is not None
 
-
     # If ICO didn`t finished yet, we participate 
     if args.ico is not None:
         node = p2p.BlockchainNode(HOST, int(args.port), int(args.port))
@@ -35,7 +34,7 @@ if __name__ == '__main__':
 
         node.connect_with_node('127.0.0.1', 8001)
         node.send_to_nodes("I want initial coins!")
-        time.sleep(30)
+        time.sleep(10)
 
         # Store initial couins
         # ...
@@ -46,15 +45,16 @@ if __name__ == '__main__':
         
     # Here the process of transactions begins
     running = 1
+    print("Commands: message, ping, discovery, status, connect, debug, stop")
     while running:
-        print("Commands: message, ping, discovery, status, connect, debug, stop")
-        s = input("Please type a command:")
+        
+        s = input("Please type a command:\n")
 
         if s == "stop":
             running = False
 
         elif s == "message":
-            node.send_message(input("Message to send:"))
+            node.send_message(input("Message to send:\n"))
 
         elif s == "ping":
             node.send_ping()
