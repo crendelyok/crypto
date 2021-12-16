@@ -6,29 +6,15 @@ that every node solved
 After ICO it chills
 '''
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 import argparse
 import p2p_nodes.blockchain_node as p2p
 import time 
-
-HOST = '127.0.0.1'
-HOST_PORT = 8001
-HOST_ID = 1
+from configuration import *
 
 class Server():
     def __init__(self):
         self.server_node = p2p.BlockchainNode(HOST, 8001, 1)
-    
+        
     def start_server(self):
         self.server_node.start()
         return
@@ -38,9 +24,14 @@ class Server():
         return
         
     def print_connections(self):
+        print('\n\n')
+        print('################################')
+        print('All server connections')
         for node in self.server_node.all_nodes:
             print(node)
-    
+        print('################################')
+        print('\n\n')
+
     def ICO(self):
         for node in self.server_node.all_nodes:
             message = { 'id' : node.id, 'ICO' : 5 }
@@ -48,31 +39,46 @@ class Server():
             # self.server_node.send_to_nodes("ICO")
             print(f'sent ICO: {message}')
 
-def Test():
-# Simple test of network connection
-    # Initial Coin Offering
+
+def Test_chain_alike_net():
+# Simple test of chain-alike network connection
+# 1 <- 2 <- 3 -< 4 ...
+# This test checks if discovery works properly
+
     server = Server()
     server.start_server()
 
-    # every node that connected during sleep gets initial balance
     nodes = []
-    for i in range(5):
+    number_of_test_nodes = 20
+
+    for i in range(number_of_test_nodes):
         node = p2p.BlockchainNode(HOST, 8000 + 2 + i, 8000 + 2 + i)
         nodes.append(node)
         node.start()
-        node.connect_with_node(HOST, 8000 + 1 + i)
-        # node.send_to_nodes("I want initial coins!")
+        node.connect_with_node(HOST, 8000 + 1 + i, reconnect=True)
         
-    for i in range(5):
+    for node in nodes:
         node.send_discovery()
+        # time.sleep(1)
 
-    time.sleep(5)
+    time.sleep(240)
     server.print_connections()
     server.ICO()
 
     time.sleep(5)
     for node in nodes:
+        print('\n')
+        print('################################')
+        print(f'All node {node.id} connections')
+        for node in node.all_nodes:
+            print(node)
+        print('################################')
+        print('\n')
+
+    for node in nodes:
         node.stop()
+
+    print('Stopping server')
     server.stop_server()
     return
 
@@ -85,7 +91,7 @@ if __name__ == '__main__':
         
     # It flag -t is True
     if args.test is not None:
-        Test()
+        Test_chain_alike_net()
         exit()
 
     # If no test performed
