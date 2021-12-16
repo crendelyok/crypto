@@ -14,12 +14,13 @@ class Block:
 
         self.type = kwargs.get('type', None)
         self.account = kwargs.get('address', None)
-        self.previous = kwargs.get('prevHash', None)
+        self.previous = kwargs.get('previous', None)
         self.representative = kwargs.get('representative', None)
         self.balance = kwargs.get('balance', None)
         self.link = kwargs.get('link', None)
         self.signature = kwargs.get('signature', None)
         self.work = kwargs.get('work', None)
+        self.timestamp = kwargs.get('timestamp', None)
         
 
     @property
@@ -78,7 +79,7 @@ class Blockchain:
         """
         initialize the blockchain with an empty, unmined "genesis" block.
         """
-        self.chain = [Block()]
+        self.chain = [Block(previous = 0)]
         self.blockTime = 30000
         self.difficulty = 1
 
