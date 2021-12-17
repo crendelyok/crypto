@@ -7,7 +7,8 @@ Unfortunately, net must me fully-connected. It is easier: we don`t need to broad
 It is a bad solution: we cannot scale the net.
 ## Installation
 >pip install pycryptodome \
-pip install p2pnetwork 
+pip install p2pnetwork \
+pip install argon2-cffi
 
 ## How to run
 ### Step 1 

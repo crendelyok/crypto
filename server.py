@@ -24,20 +24,18 @@ class Server():
         return
         
     def print_connections(self):
-        print('\n\n')
+        print('\n')
         print('################################')
         print('All server connections')
         for node in self.server_node.all_nodes:
             print(node)
         print('################################')
-        print('\n\n')
 
     def ICO(self):
         for node in self.server_node.all_nodes:
-            message = { 'id' : node.id, 'ICO' : 5 }
+            message = { 'id' : node.id, 'ICO' : 5, 'type' : 'ICO'}
             self.server_node.send_to_nodes(message) 
             print(f'sent ICO: {message}')
-
 
 def Test_chain_alike_net():
 # Simple test of chain-alike network connection
@@ -48,7 +46,7 @@ def Test_chain_alike_net():
     server.start_server()
 
     nodes = []
-    number_of_test_nodes = 5
+    number_of_test_nodes = 20
 
     for i in range(number_of_test_nodes):
         node = p2p.BlockchainNode(HOST, HOST_PORT + 1 + i, HOST_PORT + 1 + i)
@@ -110,9 +108,8 @@ if __name__ == '__main__':
     # We use it for debugging and observing the net
     running = 1
     while running:
-        print("Commands: stop")
+        print("Commands: [stop]")
         s = input("Please type a command:")
-
         if s == "stop":
             running = False
         else:

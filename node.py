@@ -2,6 +2,7 @@ import argparse
 import p2p_nodes.blockchain_node as p2p
 import time 
 from configuration import *
+import argon2, binascii
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,9 +17,18 @@ if __name__ == '__main__':
     if args.ico is not None:
         node = p2p.BlockchainNode(HOST, int(args.port))
         node.start()
+        
+        # # Creating account
+        # node.password = input("Please type password:\n") 
+        # hash = argon2.hash_password_raw(
+        #     time_cost=16, memory_cost=2**15, parallelism=2, hash_len=32,
+        #     password=str.encode(node.password), salt=b'some salt')
+        # node.id = binascii.hexlify(hash).decode()   
+        # print(node.id)
 
         node.connect_with_node(HOST, HOST_PORT)
-        node.send_to_nodes("I want initial coins!")
+        node.send_discovery()
+        # node.send_to_nodes("I want initial coins!")
         time.sleep(10)
 
         # Store initial coins
@@ -30,36 +40,44 @@ if __name__ == '__main__':
         
     # Here the process of transactions begins
     running = 1
-    print("Commands: message, ping, discovery, status, connect, debug, stop")
-    while running:
-        
-        s = input("Please type a command:\n")
+    print("Commands: [message, ping, discovery, status, connect, debug, stop, balance, adresses]")
+    try:
+        while running:
+            s = input("Please type a command:\n")
 
-        if s == "stop":
-            running = False
+            if s == "stop":
+                running = False
 
-        elif s == "message":
-            node.send_message(input("Message to send:\n"))
+            elif s == "message":
+                node.send_message(input("Message to send:\n"))
 
-        elif s == "ping":
-            node.send_ping()
+            elif s == "ping":
+                node.send_ping()
 
-        elif s == "discovery":
-            node.send_discovery()
+            elif s == "discovery":
+                node.send_discovery()
 
-        elif s == "status":
-            node.print_connections()
+            elif s == "status":
+                node.print_connections()
 
-        elif s == "debug":
-            node.debug = not node.debug
+            elif s == "balance":
+                print(node.blockchain)
 
-        elif ( s == "connect"):
-            host = input("host: ")
-            port = int(input("port: "))
-            node.connect_with_node(host, port)
+            elif s == "adresses":
+                node.print_known_ids()
 
-        else:
-            print("Command not understood '" + s + "'")   
+            elif s == "debug":
+                node.debug = not node.debug
 
+            elif ( s == "connect"):
+                host = input("host: ")
+                port = int(input("port: "))
+                node.connect_with_node(host, port)
 
+            else:
+                print("Command not understood '" + s + "'")   
+    except Exception as e:
+        print(e)
+        node.stop()
+    
     node.stop()

@@ -12,16 +12,19 @@ class Block:
         :param prevHash: Hash of the previous block, defaults to None.  Should always be specefied except for the genesis block.
         """
 
-        self.type = kwargs.get('type', None)
-        self.account = kwargs.get('address', None)
-        self.previous = kwargs.get('previous', None)
-        self.representative = kwargs.get('representative', None)
-        self.balance = kwargs.get('balance', None)
-        self.link = kwargs.get('link', None)
-        self.signature = kwargs.get('signature', None)
-        self.work = kwargs.get('work', None)
         self.timestamp = kwargs.get('timestamp', None)
-        
+        self.prevHash = kwargs.get('prevHash', None)
+        self._hash = None
+        self.nonce = 0 # self.work for PoW
+        self.data = kwargs.get('data', None)
+        # {
+        #     'type' : kwargs.get('type', None),
+        #     'account': kwargs.get('address', None),
+        #     'representative' : kwargs.get('representative', None),
+        #     'balance' : kwargs.get('balance', None),
+        #     'link' : kwargs.get('link', None),
+        #     'signature' : kwargs.get('signature', None)
+        # }
 
     @property
     def hash(self):
@@ -79,7 +82,7 @@ class Blockchain:
         """
         initialize the blockchain with an empty, unmined "genesis" block.
         """
-        self.chain = [Block(previous = 0)]
+        self.chain = [Block(prevHash = 0)]
         self.blockTime = 30000
         self.difficulty = 1
 
