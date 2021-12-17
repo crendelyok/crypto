@@ -14,9 +14,10 @@ class Block:
 
         self.timestamp = kwargs.get('timestamp', None)
         self.prevHash = kwargs.get('prevHash', None)
-        self._hash = None
-        self.nonce = 0 # self.work for PoW
+        self._hash = kwargs.get('_hash', None)
+        self.nonce = kwargs.get('nonce', 0) # self.work for PoW
         self.data = kwargs.get('data', None)
+        
         # {
         #     'type' : kwargs.get('type', None),
         #     'account': kwargs.get('address', None),

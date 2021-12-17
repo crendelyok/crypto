@@ -40,12 +40,12 @@ if __name__ == '__main__':
         
     # Here the process of transactions begins
     running = 1
-    print("Commands: [message, ping, discovery, status, connect, debug, stop, balance, adresses]")
+    print("Commands: [message, discovery, status, connect, debug, stop, balance, adresses, send, show]")
     try:
         while running:
             s = input("Please type a command:\n")
 
-            if s == "stop":
+            if s == "s":
                 running = False
 
             elif s == "message":
@@ -66,10 +66,17 @@ if __name__ == '__main__':
             elif s == "debug":
                 node.debug = not node.debug
 
-            elif s == "Send":
+            elif s == "send":
                 address = input("address: ")
                 amount = int(input("Amount: "))
                 node.transaction_send(address, amount)
+
+            elif s == "show":
+                for chain in node.all_blockchains:
+                    print('***************************')
+                    print(f'blockchain of {chain}')
+                    print(node.all_blockchains[chain])
+                    print('***************************')
 
             # elif ( s == "connect"):
             #     host = input("host: ")

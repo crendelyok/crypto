@@ -17,8 +17,8 @@ class BlockchainNode (Node):
         self.connection_debug = True
 
         self.blockchain = bc.Blockchain()
-        self.other_blockchains = {}
-        
+        self.all_blockchains = {}
+
         self.discovery_messages = {}
         self.known_ids = []
         # Account
@@ -67,7 +67,7 @@ class BlockchainNode (Node):
     def node_disconnect_with_outbound_node(self, node):
         self.print_connection_debug("node wants to disconnect with oher outbound node: (" + self.id + "): " + node.id)
         
-    def node_request_to_stop(self):
+    def node_request_to_stop(self): 
         self.print_connection_debug("node is requested to stop (" + self.id + "): ")
 
 
@@ -77,7 +77,7 @@ class BlockchainNode (Node):
 
     def node_message(self, node, message):
     # When 'this node' gets 'message' from 'node'
-        # print("node_message (" + self.id + ") from " + node.id + ": " + str(message))
+        print("node_message (" + self.id + ") from " + node.id + ": " + str(message))
 
         if self.check_message(message):
             if ('type' in message):
@@ -87,6 +87,9 @@ class BlockchainNode (Node):
                     self.receive_discovery_answer(node, message)
                 elif (message['type'] == 'ICO'):
                     self.perform_ICO(node, message)
+                elif (message['type'] == 'ICO_request'):
+                    self.recieve_ICO_req(node, message)
+
                 elif (message['type'] == 'Send'):
                     self.recieve_send(node, message)
                 elif (message['type'] == 'Recieve'):
@@ -100,9 +103,12 @@ class BlockchainNode (Node):
 
     def make_message(self, message):
     # Creates message that will be sent to other nodes
+        if 'type' not in message:
+            if 'data' in message['data']:
+                message['type'] = message['data']['type']
+
         # if 'id' not in message:
         #     message['id'] = self.id
-
         # message['timestamp'] = time.time()
         # message['hash'] = self.get_hash(message)
         # message['sign'] = self.get_sign()
@@ -151,23 +157,38 @@ class BlockchainNode (Node):
     def perform_ICO(self, node, message):
     # Saving ICO. Not protected. 
     # It creates first non-genesis block
-    # And add it to local blockchain
-        if message['id'] != self.id:
-            return
-
-        self.blockchain.append(data=
-            {
+        data = {
                 'type' : 'Recieve',
-                'address' : self.id,
-                # 'previous' : 0,
+                'address' : message['id'],
                 'signature' : node.id,
                 'balance' : message['ICO'],
                 'representative' : self.id,
+            }
+        
+        if message['id'] == self.id:
+            self.blockchain.append(data=data, timestamp = time.time())
+            self.send_to_nodes(self.make_message({
+                'type' : 'ICO_request',
+                'data' : self.blockchain[-1].data,
+                'nonce' : self.blockchain[-1].nonce,
+                '_hash' : self.blockchain[-1]._hash,
+                'prevHash' : self.blockchain[-1].prevHash,
+                'timestamp' : self.blockchain[-1].timestamp
+        }))
 
-            }, timestamp = time.time()
-        )
+    def recieve_ICO_req(self, node, message):
+        block = bc.Block(
+                    data = message['data'],
+                    nonce = message['nonce'],
+                    _hash = message['_hash'],
+                    prevHash = message['prevHash'],
+                    timestamp = message['timestamp']
+                )
+        self.all_blockchains[message['data']['address']] = bc.Blockchain()
+        self.all_blockchains[message['data']['address']].chain.append(block)
 
-        print(self.blockchain)
+
+
 
     def transaction_send(self, address, amount):
         data={
@@ -179,42 +200,121 @@ class BlockchainNode (Node):
                 'representative' : self.id,
                 'amount' : amount # BAD SHOULD CALCULATE IT BY BLOCK[-2] - BLOCK[-1]
             }
-        self.blockchain.append(data=data, timestamp = time.time())
-        self.send_to_nodes(self.make_message(data))
 
-    def recieve_send(self, node, message):
-        if message['link'] == self.id:
+        self.blockchain.append(data=data, timestamp = time.time())
+        self.send_to_nodes(self.make_message({
+            'type' : 'Send',
+            'data' : self.blockchain[-1].data,
+            'nonce' : self.blockchain[-1].nonce,
+            '_hash' : self.blockchain[-1]._hash,
+            'prevHash' : self.blockchain[-1].prevHash,
+            'timestamp' : self.blockchain[-1].timestamp
+        }))
+
+
+
+
+    def recieve_send(self, node, message):        
+        if message['data']['link'] == self.id:
             data = {
                 'type' : 'Recieve',
-                'link' : message['signature'],
+                'link' : message['data']['signature'],
                 # 'previous' : self.blockchain[-1],
                 'signature' : self.id,
-                'balance' : self.get_balance() + int(message['amount']),
+                'balance' : self.get_balance() + int(message['data']['amount']),
                 'representative' : self.id,
-                'amount' : message['amount']
+                'amount' : message['data']['amount']
             }
             self.blockchain.append(data=data, timestamp = time.time())
-            self.send_to_nodes(self.make_message(data))
+            self.send_to_nodes(self.make_message({
+                'type' : 'Recieve',
+                'data' : self.blockchain[-1].data,
+                'nonce' : self.blockchain[-1].nonce,
+                '_hash' : self.blockchain[-1]._hash,
+                'prevHash' : self.blockchain[-1].prevHash,
+                'timestamp' : self.blockchain[-1].timestamp
+            }))
         else:
-            # CONSENSUS
-            pass
-        return
+            if self.ValidSend(node, message):
+                block = bc.Block(
+                    data = message['data'],
+                    nonce = message['nonce'],
+                    _hash = message['_hash'],
+                    prevHash = message['prevHash'],
+                    timestamp = message['timestamp']
+                )
+                print('appending all_blockchains')
+                self.all_blockchains[message['data']['signature']].chain.append(block)
+            else:
+                print(f'{bcolors.FAIL}Someone is trying to ruin BC!{bcolors.ENDC}')
 
-    # def transaction_recieve(self, address, message):
-    #     data={
-    #             'type' : 'Send',
-    #             'link' : address,
-    #             # 'previous' : self.blockchain[-1],
-    #             'signature' : self.id,
-    #             'balance' : self.get_balance - amount,
-    #             'representative' : self.id,
-    #         }
-    #     self.blockchain.append(data=data, timestamp = time.time())
-    #     self.send_to_nodes(self.make_message(data))
+
 
     def recieve_recieve(self, node, message):
-        # CONSENSUS
-        return
+        if message['data']['link'] == self.id:
+            if self.ValidRecieve(node, message): # check if we had sent to this address
+                block = bc.Block(
+                        data = message['data'],
+                        nonce = message['nonce'],
+                        _hash = message['_hash'],
+                        prevHash = message['prevHash'],
+                        timestamp = message['timestamp']
+                    )
+                self.all_blockchains[message['data']['signature']].chain.append(block)
+            else:
+                print(f'{bcolors.FAIL}Someone is trying to ruin BC by recieve!{bcolors.ENDC}')
+            # otherwise dont validate!!!!
+            pass
+        else:
+            if self.ValidRecieve(node, message):
+                block = bc.Block(
+                    data = message['data'],
+                    nonce = message['nonce'],
+                    _hash = message['_hash'],
+                    prevHash = message['prevHash'],
+                    timestamp = message['timestamp']
+                )
+                print('appending all_blockchains')
+                self.all_blockchains[message['data']['signature']].chain.append(block)
+            else:
+                print(f'{bcolors.FAIL}Someone is trying to ruin BC by send!{bcolors.ENDC}')
+    
+
+    def ValidSend(self, node, message):
+        block = bc.Block(
+            data = message['data'],
+            nonce = message['nonce'],
+            _hash = message['_hash'],
+            prevHash = message['prevHash'],
+            timestamp = message['timestamp']
+        )
+        print('appending all_blockchains')
+        self.all_blockchains[message['data']['signature']].chain.append(block)
+        if self.all_blockchains[message['data']['signature']].isValid():
+            self.all_blockchains[message['data']['signature']].chain.pop()
+            return True
+        else:
+            self.all_blockchains[message['data']['signature']].chain.pop()
+            return True
+
+    def ValidRecieve(self, node, message):
+        block = bc.Block(
+            data = message['data'],
+            nonce = message['nonce'],
+            _hash = message['_hash'],
+            prevHash = message['prevHash'],
+            timestamp = message['timestamp']
+        )
+        print('appending all_blockchains')
+        self.all_blockchains[message['data']['signature']].chain.append(block)
+        if self.all_blockchains[message['data']['signature']].isValid():
+            self.all_blockchains[message['data']['signature']].chain.pop()
+            return True
+        else:
+            self.all_blockchains[message['data']['signature']].chain.pop()
+            return True
+
+
 
     #######################################################
     # Cryptography. Hashing, signing etc.                 #

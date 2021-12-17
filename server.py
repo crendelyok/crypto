@@ -110,8 +110,14 @@ if __name__ == '__main__':
     while running:
         print("Commands: [stop]")
         s = input("Please type a command:")
-        if s == "stop":
+        if s == "s":
             running = False
+        elif s == "show":
+            for chain in server.server_node.all_blockchains:
+                print('***************************')
+                print(f'blockchain of {chain}')
+                print(server.server_node.all_blockchains[chain])
+                print('***************************')
         else:
             print("Command not understood '" + s + "'")   
 
