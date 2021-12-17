@@ -17,7 +17,8 @@ class BlockchainNode (Node):
         self.connection_debug = True
 
         self.blockchain = bc.Blockchain()
-
+        self.other_blockchains = {}
+        
         self.discovery_messages = {}
         self.known_ids = []
         # Account
@@ -39,6 +40,9 @@ class BlockchainNode (Node):
     def print_connection_debug(self, data):
         if self.connection_debug:
             print(data)
+
+    def get_balance(self):
+        return int(self.blockchain[-1].data['balance'])
 
     #######################################################
     # Connect and disconnect                              #
@@ -83,6 +87,10 @@ class BlockchainNode (Node):
                     self.receive_discovery_answer(node, message)
                 elif (message['type'] == 'ICO'):
                     self.perform_ICO(node, message)
+                elif (message['type'] == 'Send'):
+                    self.recieve_send(node, message)
+                elif (message['type'] == 'Recieve'):
+                    self.recieve_recieve(node, message)
                 else:
                     pass
     
@@ -92,8 +100,8 @@ class BlockchainNode (Node):
 
     def make_message(self, message):
     # Creates message that will be sent to other nodes
-        if 'id' not in message:
-            message['id'] = self.id
+        # if 'id' not in message:
+        #     message['id'] = self.id
 
         # message['timestamp'] = time.time()
         # message['hash'] = self.get_hash(message)
@@ -151,8 +159,8 @@ class BlockchainNode (Node):
             {
                 'type' : 'Recieve',
                 'address' : self.id,
-                'previous' : 0,
-                'from' : node.id,
+                # 'previous' : 0,
+                'signature' : node.id,
                 'balance' : message['ICO'],
                 'representative' : self.id,
 
@@ -161,6 +169,52 @@ class BlockchainNode (Node):
 
         print(self.blockchain)
 
+    def transaction_send(self, address, amount):
+        data={
+                'type' : 'Send',
+                'link' : address,
+                # 'previous' : self.blockchain[-1],
+                'signature' : self.id,
+                'balance' : self.get_balance() - int(amount),
+                'representative' : self.id,
+                'amount' : amount # BAD SHOULD CALCULATE IT BY BLOCK[-2] - BLOCK[-1]
+            }
+        self.blockchain.append(data=data, timestamp = time.time())
+        self.send_to_nodes(self.make_message(data))
+
+    def recieve_send(self, node, message):
+        if message['link'] == self.id:
+            data = {
+                'type' : 'Recieve',
+                'link' : message['signature'],
+                # 'previous' : self.blockchain[-1],
+                'signature' : self.id,
+                'balance' : self.get_balance() + int(message['amount']),
+                'representative' : self.id,
+                'amount' : message['amount']
+            }
+            self.blockchain.append(data=data, timestamp = time.time())
+            self.send_to_nodes(self.make_message(data))
+        else:
+            # CONSENSUS
+            pass
+        return
+
+    # def transaction_recieve(self, address, message):
+    #     data={
+    #             'type' : 'Send',
+    #             'link' : address,
+    #             # 'previous' : self.blockchain[-1],
+    #             'signature' : self.id,
+    #             'balance' : self.get_balance - amount,
+    #             'representative' : self.id,
+    #         }
+    #     self.blockchain.append(data=data, timestamp = time.time())
+    #     self.send_to_nodes(self.make_message(data))
+
+    def recieve_recieve(self, node, message):
+        # CONSENSUS
+        return
 
     #######################################################
     # Cryptography. Hashing, signing etc.                 #
@@ -216,7 +270,7 @@ class BlockchainNode (Node):
 
 
 
-        return 1, 1
+        return 1, self.port
  
     def get_public_key(self):
         return 1

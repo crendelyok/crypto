@@ -29,7 +29,7 @@ if __name__ == '__main__':
         node.connect_with_node(HOST, HOST_PORT)
         node.send_discovery()
         # node.send_to_nodes("I want initial coins!")
-        time.sleep(10)
+        time.sleep(2)
 
         # Store initial coins
         # ...
@@ -51,9 +51,6 @@ if __name__ == '__main__':
             elif s == "message":
                 node.send_message(input("Message to send:\n"))
 
-            elif s == "ping":
-                node.send_ping()
-
             elif s == "discovery":
                 node.send_discovery()
 
@@ -69,10 +66,15 @@ if __name__ == '__main__':
             elif s == "debug":
                 node.debug = not node.debug
 
-            elif ( s == "connect"):
-                host = input("host: ")
-                port = int(input("port: "))
-                node.connect_with_node(host, port)
+            elif s == "Send":
+                address = input("address: ")
+                amount = int(input("Amount: "))
+                node.transaction_send(address, amount)
+
+            # elif ( s == "connect"):
+            #     host = input("host: ")
+            #     port = int(input("port: "))
+            #     node.connect_with_node(host, port)
 
             else:
                 print("Command not understood '" + s + "'")   

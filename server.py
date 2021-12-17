@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # Initial Coin Offering
     server = Server()
     server.start_server()
-    time.sleep(10) 
+    time.sleep(3) 
 
     # every node that connected during sleep gets initial balance
     server.print_connections()
