@@ -295,7 +295,7 @@ class BlockchainNode (Node):
             return True
         else:
             self.all_blockchains[message['data']['signature']].chain.pop()
-            return True
+            return False
 
     def ValidRecieve(self, node, message):
         block = bc.Block(
@@ -312,7 +312,7 @@ class BlockchainNode (Node):
             return True
         else:
             self.all_blockchains[message['data']['signature']].chain.pop()
-            return True
+            return False
 
 
 
@@ -362,11 +362,11 @@ class BlockchainNode (Node):
         # print(private_key.exportKey(format='PEM'))
         # print(public_key.exportKey(format='OpenSSH'))
 
-        with open (f"data_keys\{self.port}private.pem", "w+") as prv_file:
-            print("{}".format(private_key.exportKey()), file=prv_file)
+        # with open (f"data_keys\{self.port}private.pem", "w+") as prv_file:
+        #     print("{}".format(private_key.exportKey()), file=prv_file)
 
-        with open (f"data_keys\{self.port}public.openssh", "w+") as pub_file:
-            print("{}".format(public_key.exportKey(format='OpenSSH')), file=pub_file)   
+        # with open (f"data_keys\{self.port}public.openssh", "w+") as pub_file:
+        #     print("{}".format(public_key.exportKey(format='OpenSSH')), file=pub_file)   
 
 
 
