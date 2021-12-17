@@ -82,7 +82,7 @@ def Test_chain_alike_net():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--test', action='store_const', const = 1,  help='Test run')
-    parser.add_argument('-n', action='store', help='Number of nodes to connect to perform ICO')
+    parser.add_argument('-n', action='store', help='Number of nodes to connect to perform ICO') # not implemented
     args = parser.parse_args()
 
         
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     # Initial Coin Offering
     server = Server()
     server.start_server()
-    time.sleep(3) 
+    time.sleep(30) 
 
     # every node that connected during sleep gets initial balance
     server.print_connections()
